@@ -85,8 +85,8 @@ router.post('/upload', upload.single('resume'), async (req: MulterRequest, res: 
       analysis: analysis,
     });
 
-  } catch (error) {
-    console.error('Error during resume processing:', error);
+    } catch (error: unknown) {
+      console.error('Error during resume processing:', error instanceof Error ? error.message : 'Unknown error');
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }

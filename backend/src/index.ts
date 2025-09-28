@@ -161,7 +161,7 @@ const sessionConfig = {
   cookie: {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     httpOnly: true,
-    sameSite: isProduction ? 'none' : 'lax', // Must be 'none' for cross-site cookies
+    sameSite: isProduction ? 'none' as const : 'lax' as const, // Must be 'none' for cross-site cookies
     secure: isProduction, // Must be true if sameSite is 'none'
     path: '/',
     domain: isProduction ? '.ats-optimizer.railway.app' : undefined // Set domain for production

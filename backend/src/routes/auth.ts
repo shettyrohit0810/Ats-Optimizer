@@ -33,7 +33,7 @@ console.log('[AUTH] Environment FRONTEND_URL:', process.env.FRONTEND_URL);
 
 router.get('/google/callback', (req, res, next) => {
   console.log('[AUTH] Received callback from Google');
-  passport.authenticate('google', (err, user, info) => {
+  passport.authenticate('google', (err: any, user: Express.User | false | null, info: any) => {
     if (err) {
       console.error('[AUTH] Error during authentication:', err);
       return res.redirect(`${frontendUrl}/login-failed?error=${encodeURIComponent(err.message)}`);
