@@ -59,34 +59,45 @@ function logMiddlewareInit(name: string) {
 const allowedOrigins = [
   'http://localhost:3000',
   'https://ats-optimizer.netlify.app',
+  'https://ats-optimizer.railway.app',
   process.env.FRONTEND_URL || 'http://localhost:3000'
 ].filter(Boolean);
+
+// Remove duplicates
+const uniqueOrigins = [...new Set(allowedOrigins)];
 
 console.log('[CONFIG] Allowed CORS origins:', allowedOrigins);
 
 logMiddlewareInit('CORS');
 app.use(cors({
     origin: (origin, callback) => {
-      console.log('Request origin:', origin);
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+      console.log('[CORS] Request from origin:', origin);
       
-      if (allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) {
+        console.log('[CORS] Allowing request with no origin');
+        return callback(null, true);
+      }
+      
+      if (uniqueOrigins.includes(origin)) {
+        console.log('[CORS] Allowing request from whitelisted origin:', origin);
         return callback(null, true);
       }
       
       // For development, log the rejected origin
-      console.log('Rejected origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
+      console.log('[CORS] Rejected origin:', origin);
+      console.log('[CORS] Allowed origins:', uniqueOrigins);
       
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
     exposedHeaders: ['Content-Type', 'Authorization'],
-    maxAge: 86400 // 24 hours
+    maxAge: 86400, // 24 hours
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
 logMiddlewareInit('JSON Parser');
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
@@ -188,10 +199,23 @@ app.use(errorHandler);
 
 console.log('[INIT] Routes and error boundaries initialized successfully');
 
+// Root endpoint with service information
 app.get('/', (req, res) => {
+  const uptime = Date.now() - startupTime.getTime();
   res.json({ 
     status: 'OK', 
-    message: 'ATS Optimizer Backend is running',
+    service: 'ATS Optimizer Backend',
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    uptime: {
+      ms: uptime,
+      formatted: `${Math.floor(uptime / (1000 * 60 * 60))}h ${Math.floor((uptime / (1000 * 60)) % 60)}m ${Math.floor((uptime / 1000) % 60)}s`
+    },
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth/*',
+      resume: '/api/resume/*'
+    },
     timestamp: new Date().toISOString()
   });
 });
