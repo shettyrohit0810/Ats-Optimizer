@@ -81,42 +81,56 @@ const allowedOrigins = [
 // Remove duplicates and empty values
 const uniqueOrigins = [...new Set(allowedOrigins.filter(origin => origin))];
 
-// Remove duplicates
-const uniqueOrigins = [...new Set(allowedOrigins)];
-
-console.log('[CONFIG] Allowed CORS origins:', allowedOrigins);
+console.log('[CONFIG] Allowed CORS origins:', uniqueOrigins);
 
 logMiddlewareInit('CORS');
-app.use(cors({
-    origin: (origin, callback) => {
-      console.log('[CORS] Request from origin:', origin);
-      
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) {
-        console.log('[CORS] Allowing request with no origin');
-        return callback(null, true);
-      }
-      
-      if (uniqueOrigins.includes(origin)) {
-        console.log('[CORS] Allowing request from whitelisted origin:', origin);
-        return callback(null, true);
-      }
-      
-      // For development, log the rejected origin
-      console.log('[CORS] Rejected origin:', origin);
-      console.log('[CORS] Allowed origins:', uniqueOrigins);
-      
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
-    exposedHeaders: ['Content-Type', 'Authorization'],
-    maxAge: 86400, // 24 hours
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-}));
+// Configure CORS middleware with better error handling
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    console.log('[CORS] Request from origin:', origin);
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      console.log('[CORS] Allowing request with no origin');
+      return callback(null, true);
+    }
+
+    // Clean the origin URL
+    const cleanedOrigin = cleanUrl(origin);
+    console.log('[CORS] Cleaned origin:', cleanedOrigin);
+    console.log('[CORS] Allowed origins:', uniqueOrigins);
+
+    // Check if origin is allowed
+    if (uniqueOrigins.includes(cleanedOrigin)) {
+      console.log('[CORS] Origin allowed:', cleanedOrigin);
+      callback(null, true);
+      return;
+    }
+
+    // Log rejection details
+    console.error('[CORS] Origin rejected:', {
+      original: origin,
+      cleaned: cleanedOrigin,
+      allowedOrigins: uniqueOrigins,
+      matches: uniqueOrigins.map(allowed => ({
+        origin: allowed,
+        matches: allowed === cleanedOrigin
+      }))
+    });
+
+    callback(new Error('CORS policy violation'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
 logMiddlewareInit('JSON Parser');
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
 
