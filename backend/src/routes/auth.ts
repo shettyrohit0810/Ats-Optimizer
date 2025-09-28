@@ -6,10 +6,22 @@ const router = Router();
 // Redirect to Google to login
 router.get('/google', (req, res, next) => {
   console.log('[AUTH] Starting Google OAuth flow');
-  passport.authenticate('google', {
-    scope: ['profile', 'email'],
-    prompt: 'select_account'
-  })(req, res, next);
+  console.log('[AUTH] Request headers:', {
+    origin: req.get('origin'),
+    referer: req.get('referer')
+  });
+  
+  try {
+    passport.authenticate('google', {
+      scope: ['profile', 'email'],
+      prompt: 'select_account',
+      accessType: 'offline',
+      state: Math.random().toString(36).substring(7) // Add CSRF protection
+    })(req, res, next);
+  } catch (error) {
+    console.error('[AUTH] Error initiating Google OAuth:', error);
+    res.redirect(`${frontendUrl}/login-failed?error=oauth_init_failed`);
+  }
 });
 
 // Google will redirect to this URL after login

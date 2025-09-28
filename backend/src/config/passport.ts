@@ -39,12 +39,32 @@ passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
     callbackURL: callbackURL,
-    scope: ['profile', 'email']
+    scope: ['profile', 'email'],
+    proxy: true
   },
   (accessToken, refreshToken, profile, done) => {
-    // Here you would typically find or create a user in your database
-    console.log('User profile:', profile);
-    return done(null, profile);
+    try {
+      console.log('[OAUTH] Received profile from Google:', {
+        id: profile.id,
+        displayName: profile.displayName,
+        email: profile.emails?.[0]?.value,
+        provider: profile.provider
+      });
+
+      // Create a sanitized user object
+      const user = {
+        id: profile.id,
+        displayName: profile.displayName,
+        email: profile.emails?.[0]?.value,
+        provider: profile.provider,
+        accessToken // Store the access token for future use
+      };
+
+      return done(null, user);
+    } catch (error) {
+      console.error('[OAUTH] Error processing Google profile:', error);
+      return done(error as Error, undefined);
+    }
   }
 ));
 
