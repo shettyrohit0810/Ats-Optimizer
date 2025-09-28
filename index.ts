@@ -70,13 +70,21 @@ app.get('/test-simple', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-console.log('Mounting auth routes at /api/auth');
-app.use('/api/auth', authRoutes);
-console.log('Auth routes mounted successfully');
+console.log('About to mount auth routes at /api/auth');
+try {
+  app.use('/api/auth', authRoutes);
+  console.log('Auth routes mounted successfully');
+} catch (error) {
+  console.error('Error mounting auth routes:', error);
+}
 
-console.log('Mounting resume routes at /api/resume');
-app.use('/api/resume', resumeRoutes);
-console.log('Resume routes mounted successfully');
+console.log('About to mount resume routes at /api/resume');
+try {
+  app.use('/api/resume', resumeRoutes);
+  console.log('Resume routes mounted successfully');
+} catch (error) {
+  console.error('Error mounting resume routes:', error);
+}
 
 // Debug route to check if routes are working
 app.get('/api/test', (req, res) => {
@@ -104,6 +112,8 @@ app.get('/health', (req, res) => {
   });
 });
 
+console.log('Health route defined successfully');
+
 // Simple test route right after health
 app.get('/test-basic', (req, res) => {
   console.log('Test basic route hit!');
@@ -112,6 +122,8 @@ app.get('/test-basic', (req, res) => {
     timestamp: new Date().toISOString() 
   });
 });
+
+console.log('Test basic route defined successfully');
 
 // Test OAuth page
 app.get('/test-oauth', (req, res) => {
