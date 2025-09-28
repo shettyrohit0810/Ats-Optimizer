@@ -21,13 +21,17 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set');
 console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? 'Set' : 'Not set');
+console.log('=== Environment variables logged ===');
 
 // Middleware
+console.log('=== Setting up middleware ===');
 const allowedOrigins = [
   'http://localhost:3000',
   process.env.FRONTEND_URL || 'http://localhost:3000'
 ].filter(Boolean);
+console.log('Allowed origins:', allowedOrigins);
 
+console.log('=== Setting up CORS ===');
 app.use(cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
@@ -44,8 +48,11 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+console.log('=== CORS setup complete ===');
+console.log('=== Setting up body parsing ===');
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded bodies
+console.log('=== Setting up session ===');
 app.use(session({
     secret: process.env.SESSION_SECRET || 'temporary_hard_coded_session_secret',
     resave: false,
@@ -57,8 +64,10 @@ app.use(session({
       secure: process.env.NODE_ENV === 'production' // Only use secure in production
     }
 }));
+console.log('=== Setting up passport ===');
 app.use(passport.initialize());
 app.use(passport.session());
+console.log('=== Passport setup complete ===');
 
 // Test route before API routes
 app.get('/test-simple', (req, res) => {
@@ -70,21 +79,13 @@ app.get('/test-simple', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-console.log('About to mount auth routes at /api/auth');
-try {
-  app.use('/api/auth', authRoutes);
-  console.log('Auth routes mounted successfully');
-} catch (error) {
-  console.error('Error mounting auth routes:', error);
-}
+console.log('Mounting auth routes at /api/auth');
+app.use('/api/auth', authRoutes);
+console.log('Auth routes mounted successfully');
 
-console.log('About to mount resume routes at /api/resume');
-try {
-  app.use('/api/resume', resumeRoutes);
-  console.log('Resume routes mounted successfully');
-} catch (error) {
-  console.error('Error mounting resume routes:', error);
-}
+console.log('Mounting resume routes at /api/resume');
+app.use('/api/resume', resumeRoutes);
+console.log('Resume routes mounted successfully');
 
 // Debug route to check if routes are working
 app.get('/api/test', (req, res) => {
@@ -112,8 +113,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-console.log('Health route defined successfully');
-
 // Simple test route right after health
 app.get('/test-basic', (req, res) => {
   console.log('Test basic route hit!');
@@ -122,8 +121,6 @@ app.get('/test-basic', (req, res) => {
     timestamp: new Date().toISOString() 
   });
 });
-
-console.log('Test basic route defined successfully');
 
 // Test OAuth page
 app.get('/test-oauth', (req, res) => {
