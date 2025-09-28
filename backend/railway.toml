@@ -1,9 +1,10 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm run build"
+buildCommand = "npm ci --production=false && npm run build"
+watchPatterns = ["src/**/*.ts", "package.json", "tsconfig.json"]
 
 [deploy]
-startCommand = "npm run start"
+startCommand = "node dist/index.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
@@ -11,3 +12,23 @@ restartPolicyMaxRetries = 10
 
 [nixpacks]
 node-version = "18"
+plan = [
+  "install",
+  "build",
+  "start"
+]
+
+[nixpacks.setup]
+nodeVersion = "18"
+npmVersion = "9"
+
+[nixpacks.install]
+cmds = ["npm ci --production=false"]
+
+[nixpacks.build]
+cmds = ["npm run build"]
+dependsOn = ["install"]
+
+[nixpacks.start]
+cmd = "node dist/index.js"
+dependsOn = ["build"]
