@@ -475,7 +475,7 @@ const SkillsComparisonTable = ({ analysisData, editableResumeData }: { analysisD
   
   const copyAllSkills = () => {
     const skills = activeTab === 'hard' ? technicalSkillsData : softSkillsData;
-    const skillList = skills.map(s => s.skill).join(', ');
+    const skillList = skills.map((s: {skill: string, resumeCount: number, jobCount: number}) => s.skill).join(', ');
     navigator.clipboard.writeText(skillList);
   };
   
