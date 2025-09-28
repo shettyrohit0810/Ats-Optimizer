@@ -72,8 +72,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 console.log('Mounting auth routes at /api/auth');
 app.use('/api/auth', authRoutes);
+console.log('Auth routes mounted successfully');
+
 console.log('Mounting resume routes at /api/resume');
 app.use('/api/resume', resumeRoutes);
+console.log('Resume routes mounted successfully');
 
 // Debug route to check if routes are working
 app.get('/api/test', (req, res) => {
@@ -94,10 +97,19 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     service: 'ats-optimizer-backend',
     timestamp: new Date().toISOString()
+  });
+});
+
+// Simple test route right after health
+app.get('/test-basic', (req, res) => {
+  console.log('Test basic route hit!');
+  res.json({ 
+    message: 'Basic test route works!', 
+    timestamp: new Date().toISOString() 
   });
 });
 
@@ -106,16 +118,7 @@ app.get('/test-oauth', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'test.html'));
 });
 
-// Catch-all route for debugging (using proper Express syntax)
-app.use('*', (req, res) => {
-  console.log('Catch-all route hit for:', req.path);
-  res.json({ 
-    message: 'Catch-all route', 
-    path: req.path,
-    method: req.method,
-    timestamp: new Date().toISOString()
-  });
-});
+// Remove catch-all route for now to avoid conflicts
 
 app.listen(port, '0.0.0.0', () => {
   console.log('=== ATS Optimizer Backend Started Successfully ===');
