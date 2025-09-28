@@ -10,7 +10,7 @@ import resumeRoutes from './routes/resume';
 import path from 'path';
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = parseInt(process.env.PORT || '5000', 10);
 
 // Middleware
 const allowedOrigins = [
