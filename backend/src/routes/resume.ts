@@ -97,51 +97,85 @@ router.post('/upload', upload.single('resume'), async (req: MulterRequest, res: 
 // New route for comprehensive resume scan with job description
 router.post('/scan', upload.single('resume'), async (req: MulterRequest, res: Response): Promise<void> => {
   console.log('[SCAN] Received scan request');
+  console.log('[SCAN] Request headers:', {
+    contentType: req.headers['content-type'],
+    accept: req.headers['accept']
+  });
   console.log('[SCAN] Request body:', {
     hasFile: !!req.file,
     hasResumeText: !!req.body.resumeText,
     hasJobDescription: !!req.body.jobDescription,
-    contentType: req.headers['content-type']
+    bodyKeys: Object.keys(req.body)
   });
 
   try {
     let resumeText = '';
-    const jobDescription = req.body.jobDescription || '';
+    let jobDescription = '';
 
-    if (!jobDescription) {
-      console.error('[SCAN] Missing job description');
-      res.status(400).json({ error: 'Job description is required' });
-      return;
-    }
-
-    // Extract resume text from file or use provided text
-    if (req.file) {
-      console.log('[SCAN] Processing uploaded file:', {
-        filename: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-      });
-
-      try {
-        const fileBuffer = fs.readFileSync(req.file.path);
-        resumeText = await extractText(fileBuffer, req.file.mimetype);
-        console.log('[SCAN] Successfully extracted text from file');
-      } catch (error) {
-        console.error('[SCAN] Error extracting text from file:', error);
-        res.status(400).json({ error: 'Could not extract text from the uploaded file' });
+    // Handle JSON input
+    if (req.headers['content-type']?.includes('application/json')) {
+      console.log('[SCAN] Processing JSON input');
+      if (!req.body.resumeText || !req.body.jobDescription) {
+        console.error('[SCAN] Missing required fields in JSON input');
+        res.status(400).json({ 
+          error: 'Missing required fields',
+          details: {
+            resumeText: !req.body.resumeText ? 'missing' : 'present',
+            jobDescription: !req.body.jobDescription ? 'missing' : 'present'
+          }
+        });
         return;
-      } finally {
-        // Clean up uploaded file
-        if (fs.existsSync(req.file.path)) {
-          fs.unlinkSync(req.file.path);
-        }
       }
-    } else if (req.body.resumeText) {
-      console.log('[SCAN] Using provided resume text');
       resumeText = req.body.resumeText;
+      jobDescription = req.body.jobDescription;
+    }
+    // Handle multipart/form-data
+    else if (req.headers['content-type']?.includes('multipart/form-data')) {
+      console.log('[SCAN] Processing multipart/form-data input');
+      jobDescription = req.body.jobDescription;
+
+      if (!jobDescription) {
+        console.error('[SCAN] Missing job description in form data');
+        res.status(400).json({ error: 'Job description is required' });
+        return;
+      }
+
+      // Extract resume text from file or use provided text
+      if (req.file) {
+        console.log('[SCAN] Processing uploaded file:', {
+          filename: req.file.originalname,
+          mimetype: req.file.mimetype,
+          size: req.file.size
+        });
+
+        try {
+          const fileBuffer = fs.readFileSync(req.file.path);
+          resumeText = await extractText(fileBuffer, req.file.mimetype);
+          console.log('[SCAN] Successfully extracted text from file');
+        } catch (error) {
+          console.error('[SCAN] Error extracting text from file:', error);
+          res.status(400).json({ error: 'Could not extract text from the uploaded file' });
+          return;
+        } finally {
+          // Clean up uploaded file
+          if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+          }
+        }
+      } else if (req.body.resumeText) {
+        console.log('[SCAN] Using provided resume text from form');
+        resumeText = req.body.resumeText;
+      } else {
+        console.error('[SCAN] No resume content provided in form data');
+        res.status(400).json({ error: 'Resume text or file is required' });
+        return;
+      }
     } else {
-      console.error('[SCAN] No resume content provided');
-      res.status(400).json({ error: 'Resume text or file is required' });
+      console.error('[SCAN] Unsupported content type:', req.headers['content-type']);
+      res.status(415).json({ 
+        error: 'Unsupported content type',
+        supported: ['application/json', 'multipart/form-data']
+      });
       return;
     }
 

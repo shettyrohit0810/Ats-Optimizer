@@ -38,25 +38,39 @@ const NewScanSection = () => {
     setErrorMessage('');
 
     try {
-      const formData = new FormData();
+      let requestData;
       
       if (uploadedFile) {
+        // For file uploads, still use FormData
+        const formData = new FormData();
         formData.append('resume', uploadedFile);
+        formData.append('jobDescription', jobDescriptionText);
+        
+        requestData = {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+          },
+        };
       } else {
-        formData.append('resumeText', resumeText);
+        // For text input, use JSON
+        requestData = {
+          method: 'POST',
+          body: JSON.stringify({
+            resumeText,
+            jobDescription: jobDescriptionText
+          }),
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        };
       }
-      
-      formData.append('jobDescription', jobDescriptionText);
 
-      const response = await fetch(API_ENDPOINTS.SCAN, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-        headers: {
-          // Don't set Content-Type with FormData, browser will set it with boundary
-          'Accept': 'application/json',
-        },
-      });
+      const response = await fetch(API_ENDPOINTS.SCAN, requestData);
 
       if (!response.ok) {
         const errorData = await response.json();
