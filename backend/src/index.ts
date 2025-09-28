@@ -66,6 +66,7 @@ console.log('[CONFIG] Allowed CORS origins:', allowedOrigins);
 logMiddlewareInit('CORS');
 app.use(cors({
     origin: (origin, callback) => {
+      console.log('Request origin:', origin);
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
@@ -73,12 +74,18 @@ app.use(cors({
         return callback(null, true);
       }
       
+      // For development, log the rejected origin
+      console.log('Rejected origin:', origin);
+      console.log('Allowed origins:', allowedOrigins);
+      
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400 // 24 hours
 }));
 logMiddlewareInit('JSON Parser');
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies

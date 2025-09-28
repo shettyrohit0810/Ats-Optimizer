@@ -51,6 +51,11 @@ const NewScanSection = () => {
       const response = await fetch(API_ENDPOINTS.SCAN, {
         method: 'POST',
         body: formData,
+        credentials: 'include',
+        headers: {
+          // Don't set Content-Type with FormData, browser will set it with boundary
+          'Accept': 'application/json',
+        },
       });
 
       if (!response.ok) {
