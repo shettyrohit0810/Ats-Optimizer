@@ -14,9 +14,7 @@ const nextConfig: NextConfig = {
   // Netlify configuration
   trailingSlash: true,
   // Enable serverless functions for Netlify
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+  serverExternalPackages: [],
 };
 
 export default nextConfig;

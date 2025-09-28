@@ -214,10 +214,10 @@ const SkillsSummary = ({ analysisData, editableResumeData }: { analysisData: any
   };
   
   // Separate skills into have vs don't have
-  const technicalSkillsHave = finalTechnicalSkills.filter(skill => countInResume(skill) > 0);
-  const technicalSkillsDontHave = finalTechnicalSkills.filter(skill => countInResume(skill) === 0);
-  const softSkillsHave = finalSoftSkills.filter(skill => countInResume(skill) > 0);
-  const softSkillsDontHave = finalSoftSkills.filter(skill => countInResume(skill) === 0);
+  const technicalSkillsHave = finalTechnicalSkills.filter((skill: string) => countInResume(skill) > 0);
+  const technicalSkillsDontHave = finalTechnicalSkills.filter((skill: string) => countInResume(skill) === 0);
+  const softSkillsHave = finalSoftSkills.filter((skill: string) => countInResume(skill) > 0);
+  const softSkillsDontHave = finalSoftSkills.filter((skill: string) => countInResume(skill) === 0);
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -12,6 +12,14 @@ import path from 'path';
 const app = express();
 const port = parseInt(process.env.PORT || '5000', 10);
 
+console.log('Starting ATS Optimizer Backend...');
+console.log('Environment variables:');
+console.log('- PORT:', process.env.PORT);
+console.log('- NODE_ENV:', process.env.NODE_ENV);
+console.log('- FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('- GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set');
+console.log('- OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? 'Set' : 'Not set');
+
 // Middleware
 const allowedOrigins = [
   'http://localhost:3000',
@@ -79,8 +87,25 @@ app.get('/test-oauth', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'test.html'));
 });
 
-app.listen(port, '0.0.0.0', () => {
+// Add error handling for server startup
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Backend server is running on port ${port}`);
   console.log(`Health check available at http://0.0.0.0:${port}/`);
   console.log(`Test OAuth at http://0.0.0.0:${port}/test-oauth`);
+});
+
+server.on('error', (error) => {
+  console.error('Server error:', error);
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 }); 
