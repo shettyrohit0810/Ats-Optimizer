@@ -50,6 +50,13 @@ const startupTime = new Date();
 const app = express();
 const port = parseInt(process.env.PORT || '5000', 10);
 
+// Add this middleware to log all incoming requests
+app.use((req, res, next) => {
+  console.log(`[REQUEST_LOG] Inbound Request: ${req.method} ${req.originalUrl} from ${req.ip}`);
+  console.log('[REQUEST_LOG] Headers:', req.headers);
+  next();
+});
+
 // Middleware initialization logging
 function logMiddlewareInit(name: string) {
   console.log(`[INIT] Initializing middleware: ${name}`);
@@ -74,6 +81,7 @@ console.log('[CONFIG] URLs:', {
 
 const allowedOrigins = [
   'http://localhost:3000',
+  'https://ats-optimizer.netlify.app', // Hardcode the correct frontend URL
   frontendUrl,
   backendUrl
 ].filter(Boolean);
@@ -141,8 +149,10 @@ logMiddlewareInit('Session');
 // Configure session middleware with better production settings
 const isProduction = process.env.NODE_ENV === 'production';
 
+app.set('trust proxy', 1); // Trust first proxy
+
 const sessionConfig = {
-  secret: process.env.SESSION_SECRET || 'temporary_hard_coded_session_secret',
+  secret: process.env.SESSION_SECRET as string,
   resave: false,
   saveUninitialized: false,
   proxy: true, // Required for Railway/Netlify
@@ -151,21 +161,12 @@ const sessionConfig = {
   cookie: {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     httpOnly: true,
-    sameSite: 'none', // Required for cross-site authentication
-    secure: true, // Required for cross-site authentication
+    sameSite: isProduction ? 'none' : 'lax', // Must be 'none' for cross-site cookies
+    secure: isProduction, // Must be true if sameSite is 'none'
     path: '/',
+    domain: isProduction ? '.ats-optimizer.railway.app' : undefined // Set domain for production
   }
 };
-
-// Production-specific session settings
-if (isProduction) {
-  console.log('[CONFIG] Configuring session for production');
-  sessionConfig.cookie.domain = undefined; // Let the browser handle the domain
-  sessionConfig.cookie.secure = true; // Force secure in production
-} else {
-  console.log('[CONFIG] Configuring session for development');
-  sessionConfig.cookie.secure = false; // Allow non-secure in development
-}
 
 // Log session configuration
 console.log('[CONFIG] Session configuration:', {

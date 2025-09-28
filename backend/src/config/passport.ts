@@ -1,5 +1,5 @@
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as GoogleStrategy, Profile, VerifyCallback } from 'passport-google-oauth20';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -39,10 +39,10 @@ passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
     callbackURL: callbackURL,
-    scope: ['profile', 'email'],
-    proxy: true
+    passReqToCallback: true,
+    proxy: true // Add this line to trust the proxy
   },
-  (accessToken, refreshToken, profile, done) => {
+  async (req: any, accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
     try {
       console.log('[OAUTH] Received profile from Google:', {
         id: profile.id,

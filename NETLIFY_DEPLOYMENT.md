@@ -15,7 +15,110 @@ This guide will help you deploy your ATS Optimizer project using Netlify for the
 ### 1.1 Push to GitHub
 ```bash
 # Initialize git if not already done
-git init
+
+You reached the start of the range
+Sep 28, 2025, 8:00 AM
+ 
+[Region: us-west1]
+==============
+Using Nixpacks
+==============
+
+context: v7c3-S4lc
+╔════════ Nixpacks v1.38.0 ═══════╗
+║ setup      │ nodejs_18, npm-9_x ║
+║─────────────────────────────────║
+║ install    │ npm ci             ║
+║─────────────────────────────────║
+║ build      │ npm run build      ║
+║─────────────────────────────────║
+║ start      │ npm run start      ║
+╚═════════════════════════════════╝
+
+internal
+load build definition from Dockerfile
+0ms
+
+internal
+load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+282ms
+
+internal
+load .dockerignore
+0ms
+
+internal
+load build context
+0ms
+
+stage-0
+FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+8ms
+
+stage-0
+RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d cached
+0ms
+
+stage-0
+COPY .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix cached
+0ms
+
+stage-0
+WORKDIR /app/ cached
+0ms
+
+stage-0
+COPY . /app/.
+96ms
+
+stage-0
+RUN npm ci
+12s
+Run `npm audit` for details.
+
+stage-0
+COPY . /app/.
+104ms
+
+stage-0
+RUN npm run build
+1s
+> tsc
+
+stage-0
+RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile
+145ms
+
+stage-0
+COPY . /app
+29ms
+
+importing to docker
+8s
+
+auth
+sharing credentials for production-us-west2.railway-registry.com
+0ms
+=== Successfully Built! ===
+Run:
+docker run -it production-us-west2.railway-registry.com/e3a20655-ae84-4e4b-affc-31eef6ef16a2:022b3fe2-4274-45fd-958e-7ddbf4cd3115
+Build time: 79.45 seconds
+ 
+====================
+Starting Healthcheck
+====================
+Path: /health
+Retry window: 30s
+ 
+Attempt #1 failed with service unavailable. Continuing to retry for 19s
+Attempt #2 failed with service unavailable. Continuing to retry for 18s
+Attempt #3 failed with service unavailable. Continuing to retry for 6s
+ 
+1/1 replicas never became healthy!
+
+Healthcheck failed!
+
+
 git add .
 git commit -m "Initial commit"
 
