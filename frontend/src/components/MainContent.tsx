@@ -240,7 +240,7 @@ const SkillsSummary = ({ analysisData, editableResumeData }: { analysisData: any
               <span className="text-sm font-bold text-green-600">{technicalSkillsHave.length}</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {technicalSkillsHave.slice(0, 5).map((skill, index) => (
+              {technicalSkillsHave.slice(0, 5).map((skill: string, index: number) => (
                 <span key={index} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
                   {skill}
                 </span>
@@ -259,7 +259,7 @@ const SkillsSummary = ({ analysisData, editableResumeData }: { analysisData: any
               <span className="text-sm font-bold text-red-600">{technicalSkillsDontHave.length}</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {technicalSkillsDontHave.slice(0, 5).map((skill, index) => (
+              {technicalSkillsDontHave.slice(0, 5).map((skill: string, index: number) => (
                 <span key={index} className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">
                   {skill}
                 </span>
@@ -293,7 +293,7 @@ const SkillsSummary = ({ analysisData, editableResumeData }: { analysisData: any
               <span className="text-sm font-bold text-green-600">{softSkillsHave.length}</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {softSkillsHave.slice(0, 5).map((skill, index) => (
+              {softSkillsHave.slice(0, 5).map((skill: string, index: number) => (
                 <span key={index} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
                   {skill}
                 </span>
@@ -312,7 +312,7 @@ const SkillsSummary = ({ analysisData, editableResumeData }: { analysisData: any
               <span className="text-sm font-bold text-red-600">{softSkillsDontHave.length}</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {softSkillsDontHave.slice(0, 5).map((skill, index) => (
+              {softSkillsDontHave.slice(0, 5).map((skill: string, index: number) => (
                 <span key={index} className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">
                   {skill}
                 </span>
@@ -562,7 +562,7 @@ const SkillsComparisonTable = ({ analysisData, editableResumeData }: { analysisD
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {(activeTab === 'hard' ? technicalSkillsData : softSkillsData).length > 0 ? (
-              (activeTab === 'hard' ? technicalSkillsData : softSkillsData).map((skillData, index) => (
+              (activeTab === 'hard' ? technicalSkillsData : softSkillsData).map((skillData: {skill: string, resumeCount: number, jobCount: number}, index: number) => (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
