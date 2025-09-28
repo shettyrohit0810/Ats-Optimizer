@@ -58,6 +58,7 @@ function logMiddlewareInit(name: string) {
 // Middleware
 const allowedOrigins = [
   'http://localhost:3000',
+  'https://ats-optimizer.netlify.app',
   process.env.FRONTEND_URL || 'http://localhost:3000'
 ].filter(Boolean);
 
