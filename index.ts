@@ -60,13 +60,14 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
-
 // Test route before API routes
 app.get('/test-simple', (req, res) => {
+  console.log('Test simple route hit!');
   res.json({ message: 'Simple test route works!', timestamp: new Date().toISOString() });
 });
+
+// Serve static files (moved after routes to avoid conflicts)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 console.log('Mounting auth routes at /api/auth');
@@ -105,6 +106,17 @@ app.get('/test-oauth', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'test.html'));
 });
 
+// Catch-all route for debugging
+app.get('*', (req, res) => {
+  console.log('Catch-all route hit for:', req.path);
+  res.json({ 
+    message: 'Catch-all route', 
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.listen(port, '0.0.0.0', () => {
   console.log('=== ATS Optimizer Backend Started Successfully ===');
   console.log(`Backend server is running on port ${port}`);
@@ -112,5 +124,6 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`Test OAuth at http://0.0.0.0:${port}/test-oauth`);
   console.log(`API test at http://0.0.0.0:${port}/api/test`);
   console.log(`Auth test at http://0.0.0.0:${port}/api/auth/test`);
+  console.log(`Simple test at http://0.0.0.0:${port}/test-simple`);
   console.log('=== Ready to accept requests ===');
 }); 
