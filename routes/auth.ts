@@ -3,6 +3,11 @@ import passport from 'passport';
 
 const router = Router();
 
+// Test route to check if auth routes are working
+router.get('/test', (req, res) => {
+  res.json({ message: 'Auth routes are working!', timestamp: new Date().toISOString() });
+});
+
 // Redirect to Google to login
 router.get('/google', passport.authenticate('google', {
   scope: ['profile', 'email']

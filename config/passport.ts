@@ -13,7 +13,7 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
 }
 
 // Get the backend URL for the callback
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+const backendUrl = process.env.BACKEND_URL || process.env.RAILWAY_PUBLIC_DOMAIN || 'http://localhost:5000';
 const callbackURL = `${backendUrl}/api/auth/google/callback`;
 
 console.log('Google OAuth Config:');
