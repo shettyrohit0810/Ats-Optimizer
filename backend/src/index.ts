@@ -58,7 +58,20 @@ app.use('/api/auth', authRoutes);
 app.use('/api/resume', resumeRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Hello from the backend!');
+  res.json({ 
+    status: 'OK', 
+    message: 'ATS Optimizer Backend is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    service: 'ats-optimizer-backend',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Test OAuth page
@@ -66,7 +79,8 @@ app.get('/test-oauth', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'test.html'));
 });
 
-app.listen(port, () => {
-  console.log(`Backend server is running on http://localhost:${port}`);
-  console.log(`Test OAuth at http://localhost:${port}/test-oauth`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Backend server is running on port ${port}`);
+  console.log(`Health check available at http://0.0.0.0:${port}/`);
+  console.log(`Test OAuth at http://0.0.0.0:${port}/test-oauth`);
 }); 
