@@ -6,14 +6,8 @@ import OpenAI from 'openai';
 
 const router = Router();
 
-// Initialize OpenAI with the provided API key
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('OpenAI API key not found in environment variables');
-}
+// Initialize OpenAI only if key is present
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null as unknown as OpenAI;
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
