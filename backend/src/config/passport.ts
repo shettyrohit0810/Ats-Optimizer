@@ -17,12 +17,23 @@ const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 const callbackURL = `${backendUrl}/api/auth/google/callback`;
 
 // Log all relevant environment variables for debugging
-console.log('OAuth Environment Configuration:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('BACKEND_URL:', process.env.BACKEND_URL);
-console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
-console.log('Callback URL:', callbackURL);
-console.log('Google Client ID:', GOOGLE_CLIENT_ID?.substring(0, 8) + '...');
+console.log('[OAUTH] Environment Configuration:');
+console.log('[OAUTH] NODE_ENV:', process.env.NODE_ENV);
+console.log('[OAUTH] BACKEND_URL:', process.env.BACKEND_URL);
+console.log('[OAUTH] FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('[OAUTH] Callback URL:', callbackURL);
+console.log('[OAUTH] Google Client ID:', GOOGLE_CLIENT_ID?.substring(0, 8) + '...');
+
+// Validate required URLs
+if (!process.env.BACKEND_URL) {
+  console.error('[FATAL] BACKEND_URL environment variable is not set');
+  process.exit(1);
+}
+
+if (!process.env.FRONTEND_URL) {
+  console.error('[FATAL] FRONTEND_URL environment variable is not set');
+  process.exit(1);
+}
 
 passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,

@@ -110,11 +110,12 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'temporary_hard_coded_session_secret',
     resave: false,
     saveUninitialized: false,
+    proxy: true, // Required for Railway/Netlify
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       httpOnly: true,
-      sameSite: 'lax', // Needed for cross-site requests
-      secure: process.env.NODE_ENV === 'production' // Only use secure in production
+      sameSite: 'none', // Required for cross-site authentication
+      secure: true // Required for cross-site authentication
     }
 }));
 logMiddlewareInit('Passport Initialize');

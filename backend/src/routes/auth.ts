@@ -4,28 +4,45 @@ import passport from 'passport';
 const router = Router();
 
 // Redirect to Google to login
-router.get('/google', passport.authenticate('google', {
-  scope: ['profile', 'email']
-}));
+router.get('/google', (req, res, next) => {
+  console.log('[AUTH] Starting Google OAuth flow');
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account'
+  })(req, res, next);
+});
 
 // Google will redirect to this URL after login
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Debug logging
-console.log('Frontend URL:', frontendUrl);
-console.log('Environment FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('[AUTH] Frontend URL:', frontendUrl);
+console.log('[AUTH] Environment FRONTEND_URL:', process.env.FRONTEND_URL);
 
-router.get('/google/callback', 
-  passport.authenticate('google', { 
-    successRedirect: `${frontendUrl}/auth-loading`, // Redirect to loading page on success
-    failureRedirect: `${frontendUrl}/login-failed` // Redirect on failure
-  }),
-  (req, res) => {
-    // This function is called after successful authentication
-    console.log('OAuth callback successful, redirecting to:', `${frontendUrl}/auth-loading`);
-    res.redirect(`${frontendUrl}/auth-loading`);
-  }
-);
+router.get('/google/callback', (req, res, next) => {
+  console.log('[AUTH] Received callback from Google');
+  passport.authenticate('google', (err, user, info) => {
+    if (err) {
+      console.error('[AUTH] Error during authentication:', err);
+      return res.redirect(`${frontendUrl}/login-failed?error=${encodeURIComponent(err.message)}`);
+    }
+    
+    if (!user) {
+      console.error('[AUTH] Authentication failed:', info);
+      return res.redirect(`${frontendUrl}/login-failed?error=authentication_failed`);
+    }
+
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('[AUTH] Error during login:', err);
+        return res.redirect(`${frontendUrl}/login-failed?error=login_failed`);
+      }
+      
+      console.log('[AUTH] Authentication successful, redirecting to loading page');
+      res.redirect(`${frontendUrl}/auth-loading`);
+    });
+  })(req, res, next);
+});
 
 // Debug route to check environment variables
 router.get('/debug', (req, res) => {
