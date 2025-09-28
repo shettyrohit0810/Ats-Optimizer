@@ -16,9 +16,13 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
 const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
 const callbackURL = `${backendUrl}/api/auth/google/callback`;
 
-console.log('Google OAuth Config:');
-console.log('Client ID:', GOOGLE_CLIENT_ID);
+// Log all relevant environment variables for debugging
+console.log('OAuth Environment Configuration:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('BACKEND_URL:', process.env.BACKEND_URL);
+console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 console.log('Callback URL:', callbackURL);
+console.log('Google Client ID:', GOOGLE_CLIENT_ID?.substring(0, 8) + '...');
 
 passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
