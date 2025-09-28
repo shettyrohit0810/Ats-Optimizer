@@ -7,6 +7,9 @@ import session from 'express-session';
 import passport from './config/passport';
 import authRoutes from './routes/auth';
 import resumeRoutes from './routes/resume';
+
+console.log('Auth routes imported:', authRoutes);
+console.log('Resume routes imported:', resumeRoutes);
 import path from 'path';
 
 const app = express();
@@ -59,6 +62,11 @@ app.use(passport.session());
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Test route before API routes
+app.get('/test-simple', (req, res) => {
+  res.json({ message: 'Simple test route works!', timestamp: new Date().toISOString() });
+});
 
 // Routes
 console.log('Mounting auth routes at /api/auth');
