@@ -96,56 +96,119 @@ router.post('/upload', upload.single('resume'), async (req: MulterRequest, res: 
 
 // New route for comprehensive resume scan with job description
 router.post('/scan', upload.single('resume'), async (req: MulterRequest, res: Response): Promise<void> => {
+  console.log('[SCAN] Received scan request');
+  console.log('[SCAN] Request body:', {
+    hasFile: !!req.file,
+    hasResumeText: !!req.body.resumeText,
+    hasJobDescription: !!req.body.jobDescription,
+    contentType: req.headers['content-type']
+  });
+
   try {
     let resumeText = '';
     const jobDescription = req.body.jobDescription || '';
 
     if (!jobDescription) {
+      console.error('[SCAN] Missing job description');
       res.status(400).json({ error: 'Job description is required' });
       return;
     }
 
     // Extract resume text from file or use provided text
     if (req.file) {
-      const fileBuffer = fs.readFileSync(req.file.path);
-      resumeText = await extractText(fileBuffer, req.file.mimetype);
-      // Clean up uploaded file
-      fs.unlinkSync(req.file.path);
+      console.log('[SCAN] Processing uploaded file:', {
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        resumeText = await extractText(fileBuffer, req.file.mimetype);
+        console.log('[SCAN] Successfully extracted text from file');
+      } catch (error) {
+        console.error('[SCAN] Error extracting text from file:', error);
+        res.status(400).json({ error: 'Could not extract text from the uploaded file' });
+        return;
+      } finally {
+        // Clean up uploaded file
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+      }
     } else if (req.body.resumeText) {
+      console.log('[SCAN] Using provided resume text');
       resumeText = req.body.resumeText;
     } else {
+      console.error('[SCAN] No resume content provided');
       res.status(400).json({ error: 'Resume text or file is required' });
       return;
     }
 
     if (!resumeText) {
+      console.error('[SCAN] Empty resume text after processing');
       res.status(400).json({ error: 'Could not extract text from resume' });
       return;
     }
 
-    // Parse resume into structured JSON
-    const resumeJson = await parseResumeToJson(resumeText);
-    
-    // Extract job description keywords and structure
-    const jobDescriptionJson = await extractJobKeywords(jobDescription);
-    
-    // Perform resume-job comparison analysis
-    const comparisonJson = await analyzeResumeJobMatch(resumeJson, jobDescriptionJson);
-    
-    // Perform comprehensive analysis
-    const analysis = await performComprehensiveAnalysis(resumeText, jobDescription);
-    
-    res.status(200).json({
-      message: 'Resume scan completed successfully',
-      analysis: analysis,
-      resumeJson: resumeJson,
-      jobDescriptionJson: jobDescriptionJson,
-      comparisonJson: comparisonJson
-    });
+    console.log('[SCAN] Successfully prepared resume text for analysis');
 
-  } catch (error) {
-    console.error('Error during resume scan:', error);
-    res.status(500).json({ error: 'Failed to scan resume' });
+    try {
+      console.log('[SCAN] Starting resume parsing');
+      const resumeJson = await parseResumeToJson(resumeText);
+      console.log('[SCAN] Resume parsed successfully');
+      
+      console.log('[SCAN] Starting job description analysis');
+      const jobDescriptionJson = await extractJobKeywords(jobDescription);
+      console.log('[SCAN] Job description analyzed successfully');
+      
+      console.log('[SCAN] Starting resume-job comparison');
+      const comparisonJson = await analyzeResumeJobMatch(resumeJson, jobDescriptionJson);
+      console.log('[SCAN] Comparison completed successfully');
+      
+      console.log('[SCAN] Starting comprehensive analysis');
+      const analysis = await performComprehensiveAnalysis(resumeText, jobDescription);
+      console.log('[SCAN] Comprehensive analysis completed');
+      
+      const response = {
+        message: 'Resume scan completed successfully',
+        analysis: analysis,
+        resumeJson: resumeJson,
+        jobDescriptionJson: jobDescriptionJson,
+        comparisonJson: comparisonJson,
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('[SCAN] Sending successful response');
+      res.status(200).json(response);
+
+    } catch (error) {
+      console.error('[SCAN] Error during analysis:', error);
+      
+      // Determine error type and send appropriate response
+      if (error instanceof SyntaxError) {
+        res.status(400).json({ 
+          error: 'Invalid input format',
+          details: error.message
+        });
+      } else if (error.message?.includes('OpenAI')) {
+        res.status(503).json({ 
+          error: 'Analysis service temporarily unavailable',
+          details: 'Please try again later'
+        });
+      } else {
+        res.status(500).json({ 
+          error: 'Failed to scan resume',
+          details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+      }
+    }
+  } catch (outerError) {
+    console.error('[SCAN] Critical error:', outerError);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'An unexpected error occurred'
+    });
   }
 });
 
