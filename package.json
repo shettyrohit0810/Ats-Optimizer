@@ -2,11 +2,11 @@
   "name": "ats-optimizer",
   "version": "1.0.0",
   "description": "ATS Optimizer - AI-powered resume analysis tool",
-  "main": "backend/dist/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "cd backend && npm run start",
-    "dev": "cd backend && npm run dev",
-    "build": "tsc --project backend/tsconfig.json",
+    "start": "npm run build && node dist/index.js",
+    "dev": "ts-node-dev src/index.ts",
+    "build": "tsc",
     "install-backend": "cd backend && npm install",
     "install-frontend": "cd frontend && npm install",
     "install-all": "npm run install-backend && npm run install-frontend"
