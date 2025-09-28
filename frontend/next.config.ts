@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'export',
+  trailingSlash: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -11,9 +14,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Netlify configuration
-  trailingSlash: true,
-  // Enable serverless functions for Netlify
+  // Disable server-side features for static export
   serverExternalPackages: [],
 };
 
