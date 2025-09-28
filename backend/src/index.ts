@@ -56,15 +56,30 @@ function logMiddlewareInit(name: string) {
 }
 
 // Middleware
-// Remove trailing slashes from URLs
-const cleanUrl = (url: string) => url.replace(/\/$/, '');
+function cleanUrl(url: string): string {
+  if (!url) return '';
+  return url.replace(/\/+$/, ''); // Remove all trailing slashes
+}
+
+// Set up allowed origins
+const frontendUrl = cleanUrl(process.env.FRONTEND_URL || 'http://localhost:3000');
+const backendUrl = cleanUrl(process.env.BACKEND_URL || 'http://localhost:5000');
+
+console.log('[CONFIG] URLs:', {
+  frontend: frontendUrl,
+  backend: backendUrl,
+  raw_frontend: process.env.FRONTEND_URL,
+  raw_backend: process.env.BACKEND_URL
+});
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://ats-optimizer.netlify.app',
-  'https://ats-optimizer.railway.app',
-  process.env.FRONTEND_URL ? cleanUrl(process.env.FRONTEND_URL) : 'http://localhost:3000'
+  frontendUrl,
+  backendUrl
 ].filter(Boolean);
+
+// Remove duplicates and empty values
+const uniqueOrigins = [...new Set(allowedOrigins.filter(origin => origin))];
 
 // Remove duplicates
 const uniqueOrigins = [...new Set(allowedOrigins)];
@@ -110,6 +125,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-enc
 
 logMiddlewareInit('Session');
 // Configure session middleware with better production settings
+const isProduction = process.env.NODE_ENV === 'production';
+
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'temporary_hard_coded_session_secret',
   resave: false,
@@ -123,9 +140,18 @@ const sessionConfig = {
     sameSite: 'none', // Required for cross-site authentication
     secure: true, // Required for cross-site authentication
     path: '/',
-    domain: process.env.NODE_ENV === 'production' ? '.railway.app' : undefined
   }
 };
+
+// Production-specific session settings
+if (isProduction) {
+  console.log('[CONFIG] Configuring session for production');
+  sessionConfig.cookie.domain = undefined; // Let the browser handle the domain
+  sessionConfig.cookie.secure = true; // Force secure in production
+} else {
+  console.log('[CONFIG] Configuring session for development');
+  sessionConfig.cookie.secure = false; // Allow non-secure in development
+}
 
 // Log session configuration
 console.log('[CONFIG] Session configuration:', {
