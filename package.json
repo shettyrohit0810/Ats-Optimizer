@@ -1,4 +1,16 @@
 {
+  "name": "ats-optimizer",
+  "version": "1.0.0",
+  "description": "ATS Optimizer - AI-powered resume analysis tool",
+  "main": "backend/dist/index.js",
+  "scripts": {
+    "start": "cd backend && npm run start",
+    "dev": "cd backend && npm run dev",
+    "build": "cd backend && npm run build",
+    "install-backend": "cd backend && npm install",
+    "install-frontend": "cd frontend && npm install",
+    "install-all": "npm run install-backend && npm run install-frontend"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "lucide-react": "^0.523.0",
