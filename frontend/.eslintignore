@@ -1,0 +1,13 @@
+# Ignore CSS files
+*.css
+
+# Ignore build outputs
+.next/
+out/
+dist/
+
+# Ignore node_modules
+node_modules/
+
+# Ignore other generated files
+*.tsbuildinfo

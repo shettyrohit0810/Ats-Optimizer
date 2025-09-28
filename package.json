@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "lucide-react": "^0.523.0",
+    "next-auth": "^5.0.0-beta.29",
+    "openai": "^5.7.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19"
+  }
+}
