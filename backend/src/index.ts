@@ -135,6 +135,28 @@ const errorHandler = (err: any, req: express.Request, res: express.Response, nex
   });
 };
 
+// Debug route to check registered routes
+app.get('/debug/routes', (req, res) => {
+  const routes: string[] = [];
+  app._router.stack.forEach((middleware: any) => {
+    if (middleware.route) { // routes registered directly on the app
+      routes.push(`${Object.keys(middleware.route.methods).join(',').toUpperCase()} ${middleware.route.path}`);
+    } else if (middleware.name === 'router') { // router middleware
+      middleware.handle.stack.forEach((handler: any) => {
+        if (handler.route) {
+          routes.push(`${Object.keys(handler.route.methods).join(',').toUpperCase()} ${middleware.regexp.toString()}${handler.route.path}`);
+        }
+      });
+    }
+  });
+  res.json({
+    routes,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    allowedOrigins
+  });
+});
+
 // Routes with error boundary
 console.log('[INIT] Setting up routes with error boundaries...');
 
@@ -149,13 +171,15 @@ const withErrorBoundary = (handler: express.RequestHandler): express.RequestHand
   };
 };
 
+// Mount API routes first
+console.log('[INIT] Mounting API routes...');
 app.use('/api/auth', (req, res, next) => {
-  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  console.log(`[REQUEST] ${req.method} ${req.url} from ${req.get('origin')}`);
   next();
 }, authRoutes);
 
 app.use('/api/resume', (req, res, next) => {
-  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  console.log(`[REQUEST] ${req.method} ${req.url} from ${req.get('origin')}`);
   next();
 }, resumeRoutes);
 
