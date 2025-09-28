@@ -56,11 +56,14 @@ function logMiddlewareInit(name: string) {
 }
 
 // Middleware
+// Remove trailing slashes from URLs
+const cleanUrl = (url: string) => url.replace(/\/$/, '');
+
 const allowedOrigins = [
   'http://localhost:3000',
   'https://ats-optimizer.netlify.app',
   'https://ats-optimizer.railway.app',
-  process.env.FRONTEND_URL || 'http://localhost:3000'
+  process.env.FRONTEND_URL ? cleanUrl(process.env.FRONTEND_URL) : 'http://localhost:3000'
 ].filter(Boolean);
 
 // Remove duplicates
@@ -106,18 +109,35 @@ logMiddlewareInit('URL Encoded Parser');
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded bodies
 
 logMiddlewareInit('Session');
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'temporary_hard_coded_session_secret',
-    resave: false,
-    saveUninitialized: false,
-    proxy: true, // Required for Railway/Netlify
-    cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      httpOnly: true,
-      sameSite: 'none', // Required for cross-site authentication
-      secure: true // Required for cross-site authentication
-    }
-}));
+// Configure session middleware with better production settings
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || 'temporary_hard_coded_session_secret',
+  resave: false,
+  saveUninitialized: false,
+  proxy: true, // Required for Railway/Netlify
+  rolling: true, // Refresh session with each request
+  name: 'ats.sid', // Custom cookie name
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true,
+    sameSite: 'none', // Required for cross-site authentication
+    secure: true, // Required for cross-site authentication
+    path: '/',
+    domain: process.env.NODE_ENV === 'production' ? '.railway.app' : undefined
+  }
+};
+
+// Log session configuration
+console.log('[CONFIG] Session configuration:', {
+  ...sessionConfig,
+  secret: sessionConfig.secret ? 'Set' : 'Not set',
+  cookie: {
+    ...sessionConfig.cookie,
+    domain: sessionConfig.cookie.domain || 'default'
+  }
+});
+
+app.use(session(sessionConfig));
 logMiddlewareInit('Passport Initialize');
 app.use(passport.initialize());
 
