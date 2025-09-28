@@ -106,8 +106,8 @@ app.get('/test-oauth', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'test.html'));
 });
 
-// Catch-all route for debugging
-app.get('*', (req, res) => {
+// Catch-all route for debugging (using proper Express syntax)
+app.use('*', (req, res) => {
   console.log('Catch-all route hit for:', req.path);
   res.json({ 
     message: 'Catch-all route', 
