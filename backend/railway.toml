@@ -1,8 +1,9 @@
 [build]
 builder = "nixpacks"
+buildCommand = "cd backend && npm install && npm run build"
 
 [deploy]
-startCommand = "npm run start"
+startCommand = "cd backend && npm run start"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
@@ -10,3 +11,18 @@ restartPolicyMaxRetries = 10
 
 [nixpacks]
 node-version = "18"
+
+[nixpacks.setup]
+nodeVersion = "18"
+npmVersion = "9"
+
+[nixpacks.install]
+cmds = ["cd backend && npm install"]
+
+[nixpacks.build]
+cmds = ["cd backend && npm run build"]
+dependsOn = ["install"]
+
+[nixpacks.start]
+cmd = "cd backend && npm run start"
+dependsOn = ["build"]
