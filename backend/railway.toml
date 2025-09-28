@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "cd backend && npm install && npm run build"
 
 [deploy]
-startCommand = "cd backend && npm run start"
+startCommand = "cd backend && node dist/index.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
@@ -24,7 +24,7 @@ cmds = ["cd backend && npm run build"]
 dependsOn = ["install"]
 
 [nixpacks.start]
-cmd = "cd backend && npm run start"
+cmd = "cd backend && node dist/index.js"
 dependsOn = ["build"]
 
 [env]
