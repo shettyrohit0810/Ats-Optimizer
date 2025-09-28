@@ -456,22 +456,22 @@ const SkillsComparisonTable = ({ analysisData, editableResumeData }: { analysisD
   };
   
   const technicalSkillsData = finalTechnicalSkills
-    .filter((skill, index, self) => self.indexOf(skill) === index) // Remove duplicates
-    .map(skill => ({
+    .filter((skill: string, index: number, self: string[]) => self.indexOf(skill) === index) // Remove duplicates
+    .map((skill: string) => ({
       skill,
       resumeCount: countInResume(skill),
       jobCount: countInJobDescription(skill)
     }))
-    .sort((a, b) => b.jobCount - a.jobCount);
+    .sort((a: {skill: string, resumeCount: number, jobCount: number}, b: {skill: string, resumeCount: number, jobCount: number}) => b.jobCount - a.jobCount);
   
   const softSkillsData = finalSoftSkills
-    .filter((skill, index, self) => self.indexOf(skill) === index) // Remove duplicates
-    .map(skill => ({
+    .filter((skill: string, index: number, self: string[]) => self.indexOf(skill) === index) // Remove duplicates
+    .map((skill: string) => ({
       skill,
       resumeCount: countInResume(skill),
       jobCount: countInJobDescription(skill)
     }))
-    .sort((a, b) => b.jobCount - a.jobCount);
+    .sort((a: {skill: string, resumeCount: number, jobCount: number}, b: {skill: string, resumeCount: number, jobCount: number}) => b.jobCount - a.jobCount);
   
   const copyAllSkills = () => {
     const skills = activeTab === 'hard' ? technicalSkillsData : softSkillsData;
