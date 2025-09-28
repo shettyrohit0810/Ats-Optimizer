@@ -1,6 +1,26 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Validate required environment variables
+const requiredEnvVars = [
+  'SESSION_SECRET',
+  'FRONTEND_URL',
+  'GOOGLE_CLIENT_ID',
+  'GOOGLE_CLIENT_SECRET',
+  'OPENAI_API_KEY'
+];
+
+console.log('[INIT] Validating environment variables...');
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('[FATAL] Missing required environment variables:', missingEnvVars);
+  console.error('[FATAL] Please check your .env file and ensure all required variables are set');
+  process.exit(1);
+}
+
+console.log('[INIT] Environment validation successful');
+
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -9,8 +29,31 @@ import authRoutes from './routes/auth';
 import resumeRoutes from './routes/resume';
 import path from 'path';
 
+// Process-level error handling
+process.on('uncaughtException', (error: Error) => {
+  console.error('[FATAL] Uncaught Exception:', error);
+  console.error('[FATAL] Stack trace:', error.stack);
+  // Give time for logs to be written before exiting
+  setTimeout(() => process.exit(1), 1000);
+});
+
+process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+  console.error('[FATAL] Unhandled Promise Rejection:', reason);
+  if (reason instanceof Error) {
+    console.error('[FATAL] Stack trace:', reason.stack);
+  }
+});
+
+// Startup timestamp for uptime tracking
+const startupTime = new Date();
+
 const app = express();
 const port = parseInt(process.env.PORT || '5000', 10);
+
+// Middleware initialization logging
+function logMiddlewareInit(name: string) {
+  console.log(`[INIT] Initializing middleware: ${name}`);
+}
 
 // Middleware
 const allowedOrigins = [
@@ -18,6 +61,9 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000'
 ].filter(Boolean);
 
+console.log('[CONFIG] Allowed CORS origins:', allowedOrigins);
+
+logMiddlewareInit('CORS');
 app.use(cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
@@ -34,8 +80,13 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+logMiddlewareInit('JSON Parser');
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
+
+logMiddlewareInit('URL Encoded Parser');
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded bodies
+
+logMiddlewareInit('Session');
 app.use(session({
     secret: process.env.SESSION_SECRET || 'temporary_hard_coded_session_secret',
     resave: false,
@@ -47,15 +98,63 @@ app.use(session({
       secure: process.env.NODE_ENV === 'production' // Only use secure in production
     }
 }));
+logMiddlewareInit('Passport Initialize');
 app.use(passport.initialize());
+
+logMiddlewareInit('Passport Session');
 app.use(passport.session());
 
 // Serve static files
+logMiddlewareInit('Static Files');
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/resume', resumeRoutes);
+// Error handling middleware
+const errorHandler = (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[ERROR] Request failed:', {
+    method: req.method,
+    url: req.url,
+    body: req.body,
+    error: err.message,
+    stack: err.stack
+  });
+
+  // Don't expose stack traces in production
+  const error = process.env.NODE_ENV === 'production' ? { message: err.message } : { message: err.message, stack: err.stack };
+  
+  res.status(err.status || 500).json({
+    error,
+    timestamp: new Date().toISOString()
+  });
+};
+
+// Routes with error boundary
+console.log('[INIT] Setting up routes with error boundaries...');
+
+// Wrap route handlers with error boundary
+const withErrorBoundary = (handler: express.RequestHandler): express.RequestHandler => {
+  return async (req, res, next) => {
+    try {
+      await handler(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
+app.use('/api/auth', (req, res, next) => {
+  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  next();
+}, authRoutes);
+
+app.use('/api/resume', (req, res, next) => {
+  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  next();
+}, resumeRoutes);
+
+// Apply error handler after all routes
+app.use(errorHandler);
+
+console.log('[INIT] Routes and error boundaries initialized successfully');
 
 app.get('/', (req, res) => {
   res.json({ 
@@ -65,12 +164,34 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check endpoint
+// Health check endpoint with detailed system status
 app.get('/health', (req, res) => {
+  const uptime = Date.now() - startupTime.getTime();
+  const memoryUsage = process.memoryUsage();
+  
   res.json({ 
     status: 'healthy', 
     service: 'ats-optimizer-backend',
-    timestamp: new Date().toISOString()
+    version: process.env.npm_package_version || 'unknown',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    uptime: {
+      ms: uptime,
+      formatted: `${Math.floor(uptime / (1000 * 60 * 60))}h ${Math.floor((uptime / (1000 * 60)) % 60)}m ${Math.floor((uptime / 1000) % 60)}s`
+    },
+    system: {
+      platform: process.platform,
+      nodeVersion: process.version,
+      memory: {
+        heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024) + 'MB',
+        heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024) + 'MB',
+        rss: Math.round(memoryUsage.rss / 1024 / 1024) + 'MB'
+      }
+    },
+    config: {
+      port,
+      corsOrigins: allowedOrigins
+    }
   });
 });
 
